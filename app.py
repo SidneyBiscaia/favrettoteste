@@ -2,7 +2,6 @@ from openpyxl import load_workbook
 import streamlit as st
 import pandas as pd
 import os
-from processador import processar_extrato  # Ajuste conforme o nome correto do seu arquivo ou função
 import tempfile
 
 
