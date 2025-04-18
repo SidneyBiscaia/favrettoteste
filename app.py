@@ -130,4 +130,3 @@ if arquivo:
 
         except Exception as e:
             st.error(f"Erro no processamento: {e}")
-                )
