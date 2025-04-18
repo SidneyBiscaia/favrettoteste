@@ -1,8 +1,10 @@
-import os
-import pandas as pd
-import tempfile
 from openpyxl import load_workbook
 import streamlit as st
+import pandas as pd
+import os
+from processador import processar_extrato  # Ajuste conforme o nome correto do seu arquivo ou função
+import tempfile
+
 
 def letra_para_indice(letra):
     letra = letra.upper()
@@ -97,33 +99,35 @@ def processar_extrato(arquivo_xlsx):
 
 # ========== INTERFACE STREAMLIT ==========
 st.set_page_config(page_title="Processador de Extratos", layout="centered")
+
 st.title("📄 Processador de Extratos Bancários")
-st.write("Faça upload do arquivo `.xls` para converter e processar.")
+st.write("Faça upload de um arquivo `.xlsx` para processar os dados.")
 
-arquivo = st.file_uploader("Selecione o arquivo .xls", type=["xls"])
+# Upload do arquivo
+arquivo = st.file_uploader("Selecione o arquivo Excel (.xlsx)", type=["xlsx"])
 
+# Processamento após upload
 if arquivo:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xls") as tmp:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
         tmp.write(arquivo.read())
-        arquivo_xls = tmp.name
-        arquivo_xlsx = arquivo_xls.replace(".xls", ".xlsx")
+        caminho_temporario = tmp.name
 
-    try:
-        # Converter para .xlsx usando Pandas (sem Excel)
-        df_temp = pd.read_excel(arquivo_xls, sheet_name=0)
-        df_temp.to_excel(arquivo_xlsx, index=False)
-        st.success("Arquivo convertido para .xlsx")
-    except Exception as e:
-        st.error(f"Erro ao converter: {e}")
-        st.stop()
+    if st.button("📊 Processar Arquivo"):
+        try:
+            caminho_saida = processar_extrato(caminho_temporario)
 
-    if st.button("📥 Processar Arquivo"):
-        caminho_saida = processar_extrato(arquivo_xlsx)
-        if caminho_saida:
-            with open(caminho_saida, "rb") as f:
-                st.download_button(
-                    label="📥 Baixar planilha processada",
-                    data=f,
-                    file_name=os.path.basename(caminho_saida),
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            if caminho_saida:
+                with open(caminho_saida, "rb") as f:
+                    st.success("✅ Processamento concluído!")
+                    st.download_button(
+                        label="📥 Baixar Planilha Processada",
+                        data=f,
+                        file_name=os.path.basename(caminho_saida),
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+            else:
+                st.error("❌ Não foi possível gerar a planilha processada.")
+
+        except Exception as e:
+            st.error(f"Erro no processamento: {e}")
                 )
